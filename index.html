@@ -178,11 +178,29 @@
 
         #troll-msg {
             margin-top: 15px;
-            font-size: 0.9rem;
+            font-size: 1rem;
             color: #ff4d6d;
             font-weight: bold;
             opacity: 0;
             transition: opacity 0.3s;
+            min-height: 30px;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        #no-btn.running-away {
+            animation: buttonShake 0.3s ease-in-out;
+        }
+
+        @keyframes buttonShake {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(0.9) rotate(-5deg); }
+            75% { transform: scale(0.9) rotate(5deg); }
         }
 
         /* Success Reveal Animation */
@@ -291,52 +309,148 @@
         setInterval(createHeart, 400);
 
         /*******************************************************
-         * NO BUTTON LOGIC
+         * NO BUTTON LOGIC - ENHANCED TEASING
          *******************************************************/
-        const moveButton = (e) => {
+        const HINGLISH_MESSAGES = [
+            "Arey yaar! 😅",
+            "Bas bas! 😭",
+            "Nahi chahiye kya? 😢",
+            "Thoda soch le! 🤔",
+            "Mujhe dard ho raha hai! 💔",
+            "Please please! 🙏",
+            "Ek baar aur try kar! 😊",
+            "Tum toh bahut cute ho! 🥰",
+            "Maine tumhare liye kuch banaya hai! 💝",
+            "Bas ek baar YES dabao! 😭",
+            "Main ro dunga! 😢",
+            "Tumhara dil nahi pighla? ❤️",
+            "Chalo na please! 🥺",
+            "Mujhe reject mat karo! 💔",
+            "Tumhari smile ke liye kuch bhi! 😊",
+            "Bas bas! 😭 YES dabaa de!",
+            "Main tumhare bina nahi reh sakta! 💕",
+            "Tum meri zindagi ho! 🌟",
+            "Please accept kar lo! 🙏",
+            "Main tumhare piche piche aa raha hoon! 😅"
+        ];
+
+        let isMoving = false;
+        let moveTimeout = null;
+
+        const updateTrollMessage = () => {
+            if (noCount > 0) {
+                const messageIndex = Math.min(noCount - 1, HINGLISH_MESSAGES.length - 1);
+                trollMsg.innerText = HINGLISH_MESSAGES[messageIndex];
+                trollMsg.style.opacity = '1';
+                trollMsg.style.animation = 'shake 0.5s ease-in-out';
+                setTimeout(() => trollMsg.style.animation = '', 500);
+            }
+        };
+
+        const moveButton = (e, forceMove = false) => {
+            if (isMoving && !forceMove) return;
+            
             noCount++;
-            if (noCount >= 5) trollMsg.style.opacity = '1';
+            updateTrollMessage();
+            
+            // Add shake animation
+            noBtn.classList.add('running-away');
+            setTimeout(() => noBtn.classList.remove('running-away'), 300);
             
             // Get button dimensions
             const btnWidth = noBtn.offsetWidth;
             const btnHeight = noBtn.offsetHeight;
-            const padding = 20; // Minimum padding from edges
+            const padding = 30;
             
             // Get cursor position if available
             const cursorX = e ? e.clientX : window.innerWidth / 2;
             const cursorY = e ? e.clientY : window.innerHeight / 2;
             
-            // Calculate safe area (avoid cursor area)
-            const minDistance = 100; // Minimum distance from cursor
+            // Increase minimum distance as attempts increase (more teasing!)
+            const minDistance = Math.min(150 + (noCount * 10), 300);
             let x, y;
             let attempts = 0;
-            const maxAttempts = 50;
+            const maxAttempts = 100;
             
-            // Try to find a position that's away from cursor and within bounds
+            // Try to find a position far from cursor
             do {
                 x = Math.random() * (window.innerWidth - btnWidth - padding * 2) + padding;
                 y = Math.random() * (window.innerHeight - btnHeight - padding * 2) + padding;
                 attempts++;
                 
-                // Check if position is far enough from cursor
                 const distance = Math.sqrt(Math.pow(x - cursorX, 2) + Math.pow(y - cursorY, 2));
                 if (distance >= minDistance || attempts >= maxAttempts) break;
             } while (attempts < maxAttempts);
 
-            // Ensure button stays within viewport bounds
+            // Ensure button stays within viewport
             x = Math.max(padding, Math.min(x, window.innerWidth - btnWidth - padding));
             y = Math.max(padding, Math.min(y, window.innerHeight - btnHeight - padding));
 
+            isMoving = true;
             noBtn.style.position = 'fixed';
+            noBtn.style.transition = 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
             noBtn.style.left = `${x}px`;
             noBtn.style.top = `${y}px`;
             noBtn.style.zIndex = '100';
             noBtn.style.opacity = '1';
             noBtn.style.visibility = 'visible';
+            
+            // Make button slightly smaller as teasing increases
+            const scale = Math.max(0.85, 1 - (noCount * 0.02));
+            noBtn.style.transform = `scale(${scale})`;
+
+            // Reset moving flag after animation
+            if (moveTimeout) clearTimeout(moveTimeout);
+            moveTimeout = setTimeout(() => {
+                isMoving = false;
+            }, 250);
         };
 
-        noBtn.addEventListener('mouseenter', moveButton);
-        noBtn.addEventListener('click', (e) => { e.preventDefault(); moveButton(e); });
+        // Move on hover
+        noBtn.addEventListener('mouseenter', (e) => moveButton(e, true));
+        
+        // Move on click attempt
+        noBtn.addEventListener('click', (e) => { 
+            e.preventDefault(); 
+            moveButton(e, true); 
+        });
+
+        // Move when mouse approaches (proximity detection)
+        let proximityCheckInterval = null;
+        const startProximityDetection = () => {
+            if (proximityCheckInterval) return;
+            
+            proximityCheckInterval = setInterval(() => {
+                const btnRect = noBtn.getBoundingClientRect();
+                const btnCenterX = btnRect.left + btnRect.width / 2;
+                const btnCenterY = btnRect.top + btnRect.height / 2;
+                
+                // Check if mouse is near button (within 150px)
+                const mouseX = window.mouseX || 0;
+                const mouseY = window.mouseY || 0;
+                const distance = Math.sqrt(
+                    Math.pow(mouseX - btnCenterX, 2) + 
+                    Math.pow(mouseY - btnCenterY, 2)
+                );
+                
+                if (distance < 150 && distance > 0) {
+                    moveButton({ clientX: mouseX, clientY: mouseY });
+                }
+            }, 100);
+        };
+
+        // Track mouse position globally
+        document.addEventListener('mousemove', (e) => {
+            window.mouseX = e.clientX;
+            window.mouseY = e.clientY;
+            startProximityDetection();
+        });
+
+        // Also move on touch (for mobile)
+        noBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            moveButton(e.touches[0], true);
+        });
 
         /*******************************************************
          * YES BUTTON LOGIC
