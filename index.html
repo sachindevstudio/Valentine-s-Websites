@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Will You Be My Valentine?</title>
+    <!-- Importing cute fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&family=Dancing+Script:wght@700&family=Pacifico&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-pink: #ffafbd;
+            --primary-red: #ffc3a0;
+            --heart-color: #ff4d6d;
+            --card-bg: rgba(255, 255, 255, 0.92);
+            --gold: #d4af37;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Quicksand', sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary-pink), var(--primary-red));
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        /* Floating Hearts Background */
+        .bg-hearts {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .heart-particle {
+            position: absolute;
+            color: var(--heart-color);
+            opacity: 0.6;
+            animation: float 6s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* Card Styling */
+        .card {
+            background: var(--card-bg);
+            padding: 2.5rem 2rem;
+            border-radius: 30px;
+            box-shadow: 0 15px 45px rgba(214, 51, 132, 0.2);
+            text-align: center;
+            max-width: 450px;
+            width: 100%;
+            z-index: 10;
+            backdrop-filter: blur(8px);
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        h1 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 2.8rem;
+            color: #d63384;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #777;
+            margin-bottom: 2rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            align-items: center;
+            min-height: 60px;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        #yes-btn {
+            background-color: var(--heart-color);
+            color: white;
+        }
+
+        #yes-btn:hover {
+            transform: scale(1.15) rotate(-2deg);
+            background-color: #ff1a40;
+        }
+
+        #no-btn {
+            background-color: #fff;
+            color: #555;
+            z-index: 100;
+        }
+
+        /* Certificate Styling */
+        .hidden { display: none; }
+        
+        .certificate-frame {
+            border: 4px double var(--primary-pink);
+            padding: 20px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cert-title {
+            font-family: 'Pacifico', cursive;
+            font-size: 1.8rem;
+            color: #d63384;
+            margin-bottom: 15px;
+        }
+
+        .love-note {
+            font-style: italic;
+            color: #555;
+            margin: 15px 0;
+            min-height: 50px;
+            transition: opacity 0.5s;
+        }
+
+        .interactive-section {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .hug-btn {
+            background: linear-gradient(to right, #ff4d6d, #ff758c);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 77, 109, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 77, 109, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 77, 109, 0); }
+        }
+
+        /* Confetti Canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        #troll-msg {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #ff4d6d;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        /* Success Reveal Animation */
+        .reveal {
+            animation: revealScale 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes revealScale {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 2.2rem; }
+            .card { padding: 2rem 1rem; width: 90%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-hearts" id="hearts-container"></div>
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="card" id="main-card">
+        <!-- Step 1: Proposal -->
+        <div id="proposal-content">
+            <h1 id="greeting">Hey! ❤️</h1>
+            <p class="subtitle">I've been waiting for the perfect moment to ask...</p>
+            <p style="font-weight: 700; font-size: 1.4rem; color: #333; margin-bottom: 2rem;">Will you be my Valentine?</p>
+            <div class="btn-group">
+                <button id="yes-btn">YES 💖</button>
+                <button id="no-btn">NO 💔</button>
+            </div>
+            <p id="troll-msg">Bas bas 😭 YES dabaa de</p>
+        </div>
+
+        <!-- Step 2: Success Certificate -->
+        <div id="success-content" class="hidden reveal">
+            <div class="certificate-frame">
+                <div style="font-size: 3.5rem;">📜</div>
+                <h2 class="cert-title">Official Valentine</h2>
+                <p>This certifies that <b><span class="user-name-display"></span></b></p>
+                <p>has officially made me the</p>
+                <p style="color: #d63384; font-weight: bold; font-size: 1.2rem;">Happiest Person Alive!</p>
+                
+                <div class="love-note" id="love-note">"You're my favorite human."</div>
+                
+                <div class="interactive-section">
+                    <button class="hug-btn" id="hug-btn">Claim Virtual Hug 🤗</button>
+                    <p style="font-size: 0.75rem; margin-top: 10px; color: #999;">Valid for: Infinity & Beyond</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /*******************************************************
+         * CONFIGURATION
+         *******************************************************/
+        const TARGET_NAME = "Sweetheart"; // <--- CHANGE THE NAME HERE
+
+        const LOVE_NOTES = [
+            "\"You're the best thing that ever happened to me.\"",
+            "\"I love you more than pizza (and that's a lot).\"",
+            "\"My heart is officially your property now.\"",
+            "\"Warning: Extreme cuteness detected.\"",
+            "\"You make every day feel like Valentine's.\"",
+            "\"Forever looks good on us.\""
+        ];
+
+        /*******************************************************
+         * INITIALIZATION
+         *******************************************************/
+        const greeting = document.getElementById('greeting');
+        const noBtn = document.getElementById('no-btn');
+        const yesBtn = document.getElementById('yes-btn');
+        const hugBtn = document.getElementById('hug-btn');
+        const trollMsg = document.getElementById('troll-msg');
+        const proposalContent = document.getElementById('proposal-content');
+        const successContent = document.getElementById('success-content');
+        const heartsContainer = document.getElementById('hearts-container');
+        const noteDisplay = document.getElementById('love-note');
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let noCount = 0;
+        greeting.innerText = `Hey ${TARGET_NAME} ❤️`;
+        document.querySelectorAll('.user-name-display').forEach(el => el.innerText = TARGET_NAME);
+
+        /*******************************************************
+         * BACKGROUND HEARTS
+         *******************************************************/
+        function createHeart(customOptions = {}) {
+            const heart = document.createElement('div');
+            heart.classList.add('heart-particle');
+            heart.innerHTML = customOptions.char || '❤️';
+            heart.style.left = (customOptions.x || Math.random() * 100) + 'vw';
+            heart.style.top = customOptions.y || 'unset';
+            heart.style.fontSize = (Math.random() * 20 + 15) + 'px';
+            heart.style.animationDuration = (Math.random() * 3 + 3) + 's';
+            if (customOptions.color) heart.style.color = customOptions.color;
+            
+            heartsContainer.appendChild(heart);
+            setTimeout(() => heart.remove(), 6000);
+        }
+        setInterval(createHeart, 400);
+
+        /*******************************************************
+         * NO BUTTON LOGIC
+         *******************************************************/
+        const moveButton = (e) => {
+            noCount++;
+            if (noCount >= 5) trollMsg.style.opacity = '1';
+            
+            // Get button dimensions
+            const btnWidth = noBtn.offsetWidth;
+            const btnHeight = noBtn.offsetHeight;
+            const padding = 20; // Minimum padding from edges
+            
+            // Get cursor position if available
+            const cursorX = e ? e.clientX : window.innerWidth / 2;
+            const cursorY = e ? e.clientY : window.innerHeight / 2;
+            
+            // Calculate safe area (avoid cursor area)
+            const minDistance = 100; // Minimum distance from cursor
+            let x, y;
+            let attempts = 0;
+            const maxAttempts = 50;
+            
+            // Try to find a position that's away from cursor and within bounds
+            do {
+                x = Math.random() * (window.innerWidth - btnWidth - padding * 2) + padding;
+                y = Math.random() * (window.innerHeight - btnHeight - padding * 2) + padding;
+                attempts++;
+                
+                // Check if position is far enough from cursor
+                const distance = Math.sqrt(Math.pow(x - cursorX, 2) + Math.pow(y - cursorY, 2));
+                if (distance >= minDistance || attempts >= maxAttempts) break;
+            } while (attempts < maxAttempts);
+
+            // Ensure button stays within viewport bounds
+            x = Math.max(padding, Math.min(x, window.innerWidth - btnWidth - padding));
+            y = Math.max(padding, Math.min(y, window.innerHeight - btnHeight - padding));
+
+            noBtn.style.position = 'fixed';
+            noBtn.style.left = `${x}px`;
+            noBtn.style.top = `${y}px`;
+            noBtn.style.zIndex = '100';
+            noBtn.style.opacity = '1';
+            noBtn.style.visibility = 'visible';
+        };
+
+        noBtn.addEventListener('mouseenter', moveButton);
+        noBtn.addEventListener('click', (e) => { e.preventDefault(); moveButton(e); });
+
+        /*******************************************************
+         * YES BUTTON LOGIC
+         *******************************************************/
+        yesBtn.addEventListener('click', () => {
+            proposalContent.classList.add('hidden');
+            successContent.classList.remove('hidden');
+            startConfetti();
+            
+            // Start rotating notes
+            let noteIdx = 0;
+            setInterval(() => {
+                noteDisplay.style.opacity = 0;
+                setTimeout(() => {
+                    noteIdx = (noteIdx + 1) % LOVE_NOTES.length;
+                    noteDisplay.innerText = LOVE_NOTES[noteIdx];
+                    noteDisplay.style.opacity = 1;
+                }, 500);
+            }, 3500);
+        });
+
+        /*******************************************************
+         * HUG BUTTON LOGIC (Explosion Effect)
+         *******************************************************/
+        hugBtn.addEventListener('click', () => {
+            // Create a burst of hearts
+            for(let i=0; i<20; i++) {
+                setTimeout(() => {
+                    createHeart({ 
+                        char: ['💖', '💕', '🥰', '💝'][Math.floor(Math.random()*4)],
+                        x: Math.random() * 80 + 10, // keep central
+                        color: `hsl(${Math.random() * 360}, 100%, 70%)`
+                    });
+                }, i * 50);
+            }
+            hugBtn.innerText = "HUGGED! 🥰";
+            setTimeout(() => hugBtn.innerText = "Claim Another Hug 🤗", 2000);
+        });
+
+        /*******************************************************
+         * HEART CONFETTI
+         *******************************************************/
+        let particles = [];
+        function startConfetti() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            for (let i = 0; i < 70; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    size: Math.random() * 20 + 10,
+                    speedX: Math.random() * 4 - 2,
+                    speedY: Math.random() * 3 + 2,
+                    color: `hsl(${Math.random() * 20 + 340}, 100%, 70%)`
+                });
+            }
+            animateConfetti();
+        }
+
+        function animateConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((p) => {
+                p.y += p.speedY;
+                p.x += p.speedX;
+                ctx.fillStyle = p.color;
+                ctx.font = `${p.size}px serif`;
+                ctx.fillText('❤️', p.x, p.y);
+                if (p.y > canvas.height) p.y = -20;
+            });
+            requestAnimationFrame(animateConfetti);
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+    </script>
+</body>
+</html>
